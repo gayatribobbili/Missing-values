@@ -5,8 +5,11 @@ Created on Sun Jul 10 18:12:19 2022
 @author: gayatri
 """
 
-import pandas as pd #to work with dataframe
-import numpy as np #to work with numerical 
+import pandas as pd               #to work with dataframe
+import numpy as np                #to work with numericals
+import seaborn as sns             #to do visualization
+import matplotlib.pyplot as plt   #to do visualization
+
 #importing data into spyder
 data_csv=pd.read_csv("C:\\Users\\91939\\OneDrive\\Desktop\\spyder\\Toyota.csv")
 print(data_csv)
@@ -48,14 +51,18 @@ print(cars_data.loc[1150:1245,"FuelType"])
 print(cars_data.info())
 
 #TO FIND UNIQUE ELEMENTS OF A COLUMN
+print(np.unique(cars_data["Price"]))
+print(np.unique(cars_data["Age"]))
 print(np.unique(cars_data["KM"])) #KM IS READ AS OBJECT INSTEAD OF INTEGER SINCE IT HAS SOME SPECIAL CHRACTERS
 print(np.unique(cars_data["HP"])) #HP IS READ AS OBJECT INSTEAD OF INTEGER SINCE IT HAS SOME SPECIAL  CHARACTERSLIKE "??","###"
+print(np.unique(cars_data["CC"]))
 print(np.unique(cars_data["Doors"])) #DOORS IS READ AS OBJECT INSTAED OF INT BEACUSE OF FIVE, FOUR, THREE AS STRINGS 
 print(np.unique(cars_data["MetColor"])) 
 print(np.unique(cars_data["Automatic"]))
+print(np.unique(cars_data["Weight"]))
 
 #CONVERTING VARIABLES DATA TYPES USING "ASTYPE()
-#cars_data["Automatic"]=cars_data["Automatic"].astype("object")
+cars_data["Automatic"]=cars_data["Automatic"].astype("object")
  
 #cleaning column doors
 cars_data["Doors"].replace("three",3,inplace=True)
@@ -71,7 +78,7 @@ print(cars_data.isnull().sum())
 
 #subsetting the rows that have onr or more missing values
 missing = cars_data[cars_data.isnull().any(axis=1)]
-print(missing)
+
 
 #missing values can be filled in 2 ways 
 #in case of numerical values fill it by mean/median (km,age)
@@ -95,19 +102,105 @@ cars_data["KM"].fillna(cars_data["KM"].median(),inplace=True)
 print(cars_data["HP"].describe())
 #we got mean=101.47 whereas median=110 so, we will go with mean
 cars_data["HP"].fillna(cars_data["HP"].mean(),inplace=True)
-print(cars_data.isnull().sum())
+#print(cars_data.isnull().sum())
 
 #for MetColor 
 print(cars_data["MetColor"].describe())
 
 #as mean is 0 so we will go as categorical variable
-#series.value_counts() gives the most frequent occuring element
 print(cars_data["MetColor"].value_counts())
 print(cars_data["MetColor"].value_counts().index[0])
-cars_data["MetColor"].fillna(cars_data["MetColor"].index[0],inplace=True)
+cars_data["MetColor"].fillna(cars_data["MetColor"].value_counts().index[0],inplace=True)
 
 #for FuelType
 print(cars_data["FuelType"].value_counts())
 print(cars_data["FuelType"].value_counts().index[0])
-cars_data["FuelType"].fillna(cars_data["FuelType"].index[0],inplace=True)
+cars_data["FuelType"].fillna(cars_data["FuelType"].value_counts().index[0],inplace=True)
 print(cars_data.isnull().sum())
+print(cars_data)
+cars_data1=cars_data.copy(deep=True)
+
+
+#Exploratory Data Analysis
+#correlation 
+#Exclude the columns having datatype as object
+correlation=cars_data1.select_dtypes(exclude=[object])
+corr_matrix=correlation.corr()
+
+#crosstab
+print(pd.crosstab(index=cars_data1["KM"], columns=cars_data1["FuelType"],dropna=True))
+print(pd.crosstab(index=cars_data1["Automatic"], columns=cars_data1["FuelType"],dropna=True))
+print(pd.crosstab(index=cars_data1["KM"], columns=cars_data1["HP"],dropna=True))
+print(pd.crosstab(index=cars_data1["Age"], columns=cars_data1["FuelType"],dropna=True))
+print(pd.crosstab(index=cars_data1["Price"], columns=cars_data1["MetColor"],dropna=True))
+
+#Joint Probability
+print(pd.crosstab(index=cars_data1["KM"], columns=cars_data1["FuelType"],normalize=True,dropna=True))
+print(pd.crosstab(index=cars_data1["Automatic"], columns=cars_data1["FuelType"],normalize=True,dropna=True))
+print(pd.crosstab(index=cars_data1["Age"], columns=cars_data1["FuelType"],normalize=True,dropna=True))
+
+#Marginal Probability
+print(pd.crosstab(index=cars_data1["FuelType"], columns=cars_data1["KM"],margins=True,normalize=True,dropna=True))
+print(pd.crosstab(index=cars_data1["Automatic"], columns=cars_data1["FuelType"],margins=True,normalize=True,dropna=True))
+
+#Seaborn library 
+sns.pairplot(cars_data1)
+sns.scatterplot(cars_data1["Age"], cars_data1["Price"])#FROM THE GRAPH THE PRICE OF THE CAR DECREASES AS AGE INCREASES
+sns.scatterplot(cars_data1["FuelType"], cars_data1["KM"])
+sns.scatterplot(cars_data1["KM"],cars_data1["Price"],marker="*")#price increses KM increases
+
+sns.regplot(x="Age",y="Price",data=cars_data1,fit_reg=True)
+sns.lmplot(x="KM",y="Price",data=cars_data1,hue="FuelType",fit_reg=False,legend="True",palette="Set1")
+sns.lmplot(x="Age",y="Price",data=cars_data1,hue="FuelType",fit_reg=False,legend="True",palette="Set1",scatter=True)
+
+#Histogram
+sns.displot(cars_data1["Price"])
+sns.histplot(cars_data1["Price"],bins=10)
+sns.displot(cars_data1["Age"],kde=False,bins=5)
+sns.displot(cars_data1["MetColor"],kde=False,bins=5)
+sns.distplot(cars_data1["KM"],kde=False,bin=5)
+
+
+#BarPlot
+sns.countplot(x="FuelType",data=cars_data1)
+sns.countplot(x="Automatic",data=cars_data1)
+sns.boxplot(y=cars_data1["Age"])
+sns.boxplot(x=cars_data1["Automatic"])
+sns.boxplot(x=cars_data1["FuelType"],y=cars_data1["Price"],hue="Automatic",data=cars_data1)
+
+
+#using Matplot libarary
+plt.scatter(cars_data1["Age"],cars_data1["Price"],c='red')
+plt.title("scatter plot of price vs age")
+plt.xlabel('Age')
+plt.ylabel('price')
+plt.show()
+
+plt.scatter(cars_data1["KM"],cars_data["Price"],c="green")
+plt.title("scatter plot of fueltype vs price")
+plt.xlabel('KM')
+plt.ylabel('price')
+plt.show()
+
+#Histogram
+plt.hist(cars_data1["KM"])
+plt.hist(cars_data1["KM"],color="green",bins=5)
+plt.title("Histogram of Kilometer")
+plt.xlabel('Kilometer')
+plt.ylabel('frequency')
+plt.show()
+
+
+#Bar plot
+counts=[978,120,12]
+FuelType=('Petrol','Diesel','CNG')
+index=np.arange(len(FuelType))
+plt.bar(index,counts,color=["red","blue","cyan"])
+plt.title('Bar plots of fuel types')
+plt.xlabel('Fuel Types')
+plt.ylabel('Frequency')
+plt.xticks(index,FuelType,rotation=90)
+plt.show()
+
+
+
